@@ -7,6 +7,7 @@
 
 # Example
 ![](https://github.com/smthemex/ComfyUI_KV_Edit/blob/main/example.png)
+![](https://github.com/smthemex/ComfyUI_KV_Edit/blob/main/example1.png)
 
 # Citation
 ```

@@ -1,0 +1,15 @@
+[project]
+name = "kv_edit"
+description = "KV-Edit: Training-Free Image Editing for Precise Background Preservation,you can use it in comfyUI"
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["torch", "einops", "#fire", "#gradio==5.17.1", "#huggingface-hub", "#invisible-watermark", "#matplotlib", "numpy", "opencv-python", "Pillow", "Requests", "safetensors", "scikit-learn", "scipy", "scikit-image", "torchvision", "tqdm", "#transformers==4.49.0", "sentencepiece"]
+
+[project.urls]
+Repository = "https://github.com/smthemex/ComfyUI_KV_Edit"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "smthemex"
+DisplayName = "ComfyUI_KV_Edit"
+Icon = ""

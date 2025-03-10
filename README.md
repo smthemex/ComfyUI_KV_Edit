@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 ```
 --   ComfyUI/models/checkpoints
-    ├── flux1-dev.safetensors #22G
+    ├── flux1-dev.safetensors #23.8G 目前不能用量化版的单体，还需修改代码，全量的也能跑，慢点而已
 --   ComfyUI/models/clip
     ├── clip_l.safetensors
     ├── t5xxl_fp8_e4m3fn.safetensorsvae

@@ -1,0 +1,409 @@
+{
+  "last_node_id": 27,
+  "last_link_id": 51,
+  "nodes": [
+    {
+      "id": 23,
+      "type": "KV_Edit_Sampler",
+      "pos": [
+        21445.078125,
+        -857.873046875
+      ],
+      "size": [
+        315,
+        294
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "link": 46
+        },
+        {
+          "name": "condition",
+          "type": "CONDITION_KV",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            48
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Sampler"
+      },
+      "widgets_values": [
+        1928304025,
+        "randomize",
+        28,
+        1.5,
+        28,
+        5,
+        1,
+        1,
+        false,
+        false
+      ]
+    },
+    {
+      "id": 25,
+      "type": "PreviewImage",
+      "pos": [
+        20997.248046875,
+        -485.98480224609375
+      ],
+      "size": [
+        397.6192932128906,
+        275.04229736328125
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 49
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 24,
+      "type": "SaveImage",
+      "pos": [
+        21420.501953125,
+        -489.33489990234375
+      ],
+      "size": [
+        332.8684997558594,
+        282.47308349609375
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 48
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "LoadImage",
+      "pos": [
+        20629.349609375,
+        -741.7346801757812
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            42,
+            49
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            43
+          ],
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "clipspace/clipspace-mask-550988.5.png [input]",
+        "image"
+      ]
+    },
+    {
+      "id": 22,
+      "type": "KV_CLIP_VAE",
+      "pos": [
+        20628.51171875,
+        -328.31536865234375
+      ],
+      "size": [
+        315,
+        102
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 51,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ae",
+          "type": "VAE_",
+          "links": [
+            44
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP_",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_CLIP_VAE"
+      },
+      "widgets_values": [
+        "ae.safetensors",
+        ""
+      ]
+    },
+    {
+      "id": 27,
+      "type": "DualCLIPLoader",
+      "pos": [
+        20222.470703125,
+        -538.3670043945312
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            51
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "clip_l.safetensors",
+        "flux"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "KV_Edit_Load",
+      "pos": [
+        21000.123046875,
+        -926.8734130859375
+      ],
+      "size": [
+        378.65655517578125,
+        138.3866729736328
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "links": [
+            46
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Load"
+      },
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        true,
+        true
+      ]
+    },
+    {
+      "id": 21,
+      "type": "KV_Edit_PreData",
+      "pos": [
+        20997.255859375,
+        -730.56005859375
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 42
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 43
+        },
+        {
+          "name": "ae",
+          "type": "VAE_",
+          "link": 44
+        },
+        {
+          "name": "clip",
+          "type": "CLIP_",
+          "link": 45
+        }
+      ],
+      "outputs": [
+        {
+          "name": "condition",
+          "type": "CONDITION_KV",
+          "links": [
+            47
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_PreData"
+      },
+      "widgets_values": [
+        "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love nana'.",
+        "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love max'."
+      ]
+    }
+  ],
+  "links": [
+    [
+      42,
+      5,
+      0,
+      21,
+      0,
+      "IMAGE"
+    ],
+    [
+      43,
+      5,
+      1,
+      21,
+      1,
+      "MASK"
+    ],
+    [
+      44,
+      22,
+      0,
+      21,
+      2,
+      "VAE"
+    ],
+    [
+      45,
+      22,
+      1,
+      21,
+      3,
+      "CLIP"
+    ],
+    [
+      46,
+      1,
+      0,
+      23,
+      0,
+      "MODEL_KVEDIT"
+    ],
+    [
+      47,
+      21,
+      0,
+      23,
+      1,
+      "CONDITION_KV"
+    ],
+    [
+      48,
+      23,
+      0,
+      24,
+      0,
+      "IMAGE"
+    ],
+    [
+      49,
+      5,
+      0,
+      25,
+      0,
+      "IMAGE"
+    ],
+    [
+      51,
+      27,
+      0,
+      22,
+      0,
+      "CLIP"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9849732675807835,
+      "offset": [
+        -20169.606885859866,
+        974.5935298689876
+      ]
+    }
+  },
+  "version": 0.4
+}

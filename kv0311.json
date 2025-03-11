@@ -1,0 +1,354 @@
+{
+  "last_node_id": 28,
+  "last_link_id": 61,
+  "nodes": [
+    {
+      "id": 19,
+      "type": "KV_Edit_Sampler",
+      "pos": [
+        21439.259765625,
+        -876.9882202148438
+      ],
+      "size": [
+        315,
+        294
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "link": 48
+        },
+        {
+          "name": "condition",
+          "type": "CONDITION_KV",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            46
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Sampler"
+      },
+      "widgets_values": [
+        1994287381,
+        "randomize",
+        28,
+        1.5,
+        28,
+        3.5,
+        1,
+        1,
+        false,
+        false
+      ]
+    },
+    {
+      "id": 14,
+      "type": "SaveImage",
+      "pos": [
+        21780.08203125,
+        -884.1846923828125
+      ],
+      "size": [
+        305.730712890625,
+        292.5241394042969
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 46
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "KV_Edit_PreData",
+      "pos": [
+        21013.380859375,
+        -778.8308715820312
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 60
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 61
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 55
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 56
+        }
+      ],
+      "outputs": [
+        {
+          "name": "condition",
+          "type": "CONDITION_KV",
+          "links": [
+            52
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_PreData"
+      },
+      "widgets_values": [
+        "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love nana'.",
+        "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love here'."
+      ]
+    },
+    {
+      "id": 28,
+      "type": "VAELoader",
+      "pos": [
+        20550.685546875,
+        -800.1236572265625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            61
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 27,
+      "type": "DualCLIPLoader",
+      "pos": [
+        20556.783203125,
+        -962.564453125
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            60
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "clip_l.safetensors",
+        "flux"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "LoadImage",
+      "pos": [
+        20579.755859375,
+        -675.4324951171875
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            55
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            56
+          ],
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "clipspace/clipspace-mask-75639.png [input]",
+        "image"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "KV_Edit_Load",
+      "pos": [
+        21041.1875,
+        -950.1945190429688
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "links": [
+            48
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Load"
+      },
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        true,
+        true
+      ]
+    }
+  ],
+  "links": [
+    [
+      46,
+      19,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      48,
+      24,
+      0,
+      19,
+      0,
+      "MODEL_KVEDIT"
+    ],
+    [
+      52,
+      25,
+      0,
+      19,
+      1,
+      "CONDITION_KV"
+    ],
+    [
+      55,
+      5,
+      0,
+      25,
+      2,
+      "IMAGE"
+    ],
+    [
+      56,
+      5,
+      1,
+      25,
+      3,
+      "MASK"
+    ],
+    [
+      60,
+      27,
+      0,
+      25,
+      0,
+      "CLIP"
+    ],
+    [
+      61,
+      28,
+      0,
+      25,
+      1,
+      "VAE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8954302432552559,
+      "offset": [
+        -20384.467523464802,
+        1183.5584216169868
+      ]
+    }
+  },
+  "version": 0.4
+}

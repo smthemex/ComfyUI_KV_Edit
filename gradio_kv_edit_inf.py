@@ -1,8 +1,7 @@
 
 from dataclasses import dataclass
-
 import torch
-from .flux.kv_edit import Flux_kv_edit_inf
+
 
 @dataclass
 class SamplingOptions:
@@ -22,17 +21,17 @@ class SamplingOptions:
 
 
 class FluxEditor_kv_Wrapper_inf:
-    def __init__(self, model_path,offload,device):
+    def __init__(self, offload,device):
 
         self.device = device
         self.offload = offload
         self.is_schnell = False
-        self.model = Flux_kv_edit_inf(device="cpu" if self.offload else self.device,model_path=model_path,name='flux-dev')
-        self.model.eval()
+        #self.model = Flux_kv_edit_inf(device="cpu" if self.offload else self.device,model_path=model_path,name='flux-dev')
+        #self.model.eval()
 
             
     @torch.inference_mode()
-    def edit(self, 
+    def edit(self, model,
             opts,inp,inp_target,mask
              ):
         
@@ -42,7 +41,7 @@ class FluxEditor_kv_Wrapper_inf:
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(opts.seed)
       
-        self.model = self.model.to(self.device) 
+        self.model = model.to(self.device) 
         x = self.model(inp, inp_target, mask, opts)
         
         if self.offload:

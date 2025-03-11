@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-
+from .util import load_flux_model_,load_flux_model
 from einops import rearrange,repeat
 import torch
 import torch.nn.functional as F
 from torch import Tensor
 
 from .sampling import get_schedule, unpack,denoise_kv,denoise_kv_inf
-from .util import load_flow_model,load_flux_model
+from .util import load_flux_model_,load_flux_model
 from .model import Flux_kv
 
 # @dataclass
@@ -26,13 +26,16 @@ from .model import Flux_kv
 #     attn_mask: bool = False
 
 class only_Flux(torch.nn.Module): 
-    def __init__(self, device,model_path,name='flux-dev'):
+    def __init__(self, device,model,name='flux-dev'):
         super().__init__()
         self.device = device
         self.name = name
         self.is_dev = self.name != "flux-schnell"
         #self.model = load_flow_model(self.name, device=self.device,flux_cls=Flux_kv)
-        self.model = load_flux_model(model_path,self.device, flux_cls=Flux_kv)
+        if isinstance(model, str):
+            self.model = load_flux_model(model,self.device, flux_cls=Flux_kv)
+        else:
+            self.model = load_flux_model_(model,self.device, flux_cls=Flux_kv)
 
     def create_attention_mask(self,seq_len, mask_indices, text_len=512 , device='cuda'):
         # """
@@ -98,8 +101,9 @@ class only_Flux(torch.nn.Module):
         return attention_scale.unsqueeze(0)
     
 class Flux_kv_edit_inf(only_Flux):
-    def __init__(self, device,model_path,name):
-        super().__init__(device,model_path,name)
+    def __init__(self, device,model,name):
+        super().__init__(device,model,name)
+        
       
     @torch.inference_mode()
     def forward(self,inp,inp_target,mask,opts):

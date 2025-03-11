@@ -4,13 +4,15 @@ import os
 from PIL import Image
 import torch
 import numpy as np
-from .flux.sampling import prepare,prepare_
+from .flux.sampling import prepare
 from einops import rearrange
-from .flux.util import load_t5_,load_clip_,load_ae
+from .flux.util import load_ae_cf
 from .node_utils import cleanup,pil2narry
 from .gradio_kv_edit import FluxEditor_kv_Wrapper
+from .flux.kv_edit import Flux_kv_edit_inf,Flux_kv_edit
 from .gradio_kv_edit_inf import FluxEditor_kv_Wrapper_inf,SamplingOptions
 from comfy import model_management
+import comfy.model_management
 import folder_paths
 MAX_SEED = np.iinfo(np.int32).max
 current_node_path = os.path.dirname(os.path.abspath(__file__))
@@ -29,10 +31,11 @@ class KV_Edit_Load:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "model": (folder_paths.get_filename_list("checkpoints"),),
+                "unet": (["none"]+folder_paths.get_filename_list("diffusion_models"),),
                 "offload":("BOOLEAN",{"default":True}),
                 "use_inf":("BOOLEAN",{"default":True}),
                 },
+            "optional": { "model":("MODEL",),},
             }
 
     RETURN_TYPES = ("MODEL_KVEDIT", )
@@ -40,45 +43,26 @@ class KV_Edit_Load:
     FUNCTION = "main"
     CATEGORY = "KV_Edit"
 
-    def main(self, model,offload,use_inf):
-        model_path=folder_paths.get_full_path("checkpoints", model)
+    def main(self, unet,offload,use_inf,**kwargs):
+        cf_model=kwargs.get("model")
+        if cf_model is None:
+            if unet=="none":
+                raise Exception("Please select a model")
+            else:
+                cf_model=folder_paths.get_full_path("diffusion_models", unet)
+        device_val = "cpu" if offload else device
         if not use_inf:
-            pipeline=FluxEditor_kv_Wrapper(model_path,offload,device)
+            model=Flux_kv_edit(device_val,cf_model,'flux-dev')
+            pipeline=FluxEditor_kv_Wrapper(offload,device)
         else:
-            pipeline=FluxEditor_kv_Wrapper_inf(model_path,offload,device)
+            model=Flux_kv_edit_inf(device_val,cf_model,'flux-dev')
+            pipeline=FluxEditor_kv_Wrapper_inf(offload,device)
+        del cf_model
+        comfy.model_management.unload_all_models()
+        comfy.model_management.soft_empty_cache()
+        cleanup()
+        return ({"pipeline":pipeline,"model":model,"use_inf":use_inf},)
 
-        return ({"pipeline":pipeline,"use_inf":use_inf},)
-
-class KV_CLIP_VAE:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "vae": (folder_paths.get_filename_list("vae"),),
-                "repo": ("STRING", {"default": 'F:/test/ComfyUI/models/diffusers/black-forest-labs/FLUX.1-dev'}),
-                },
-            "optional": { "clip":("CLIP",),},
-            }
-
-    RETURN_TYPES = ("VAE_","CLIP_" )
-    RETURN_NAMES = ("ae","clip")
-    FUNCTION = "main"
-    CATEGORY = "KV_Edit"
-
-    def main(self, vae,repo,**kwargs):
-        vae_path=folder_paths.get_full_path("vae", vae)
-        ae=load_ae(vae_path).to(device=device,dtype=torch.bfloat16)
-
-        clip=kwargs.get("clip")
-        if repo:
-            T5=load_t5_(repo,device)
-            CLIP=load_clip_(repo,device)
-            clip={"T5":T5,"CLIP":CLIP}
-
-        return (ae,clip,)
     
 class KV_Edit_PreData:
     def __init__(self):
@@ -88,10 +72,10 @@ class KV_Edit_PreData:
     def INPUT_TYPES(s):
         return {
             "required": {
+                "clip":("CLIP",),
+                "vae":("VAE",),
                 "image": ("IMAGE", ), 
                 "mask":("MASK",),# B H W 
-                "ae":("VAE_",),
-                "clip":("CLIP_",),
                 "source_prompt": ("STRING", {"default": "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love nana'.", "multiline": True,"tooltip": "The source_prompt to be encoded."}),
                 "target_prompt": ("STRING", {"default": "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love here'.", "multiline": True,"tooltip": "The target_prompt to be encoded."}),
                  },
@@ -114,13 +98,8 @@ class KV_Edit_PreData:
         init_image = ae.encode(init_image).to(torch.bfloat16)
         return init_image
     
-    def main(self, image,mask,ae,clip,source_prompt,target_prompt,):
-        if isinstance(clip,dict):
-            T5=clip["T5"]
-            CLIP=clip["CLIP"]
-            repo=True
-        else:
-            repo=False
+    def main(self,clip, vae,image,mask,source_prompt,target_prompt,):
+        ae=load_ae_cf(vae).to(device=device,dtype=torch.bfloat16)
 
         # encode image
         np_image=image.squeeze().mul(255).clamp(0, 255).byte().numpy()
@@ -145,17 +124,14 @@ class KV_Edit_PreData:
         #print(mask.shape) #torch.Size([1, 1, 512, 512])
       
         with torch.no_grad():
-            if repo:
-                inp = prepare_(T5,CLIP,device,latent_image, prompt=source_prompt)
-                inp_target = prepare_(T5,CLIP,device, latent_image, prompt=target_prompt)
-                T5.to("cpu")
-                CLIP.to("cpu")
-            else:
-                if clip is None:
-                    raise Exception("clip is None")
-                inp = prepare(clip,device,latent_image, prompt=source_prompt)
-                inp_target = prepare(clip,device, latent_image, prompt=target_prompt)
-       
+            if clip is None:
+                raise Exception("clip is None")
+            inp = prepare(clip,device,latent_image, prompt=source_prompt)
+            inp_target = prepare(clip,device, latent_image, prompt=target_prompt)
+        
+        comfy.model_management.unload_all_models()
+        comfy.model_management.soft_empty_cache()
+        cleanup()
        
         return ({"inp":inp,"inp_target":inp_target,"mask":mask,"source_prompt":source_prompt,"target_prompt":target_prompt,"size":(width,height),"ae":ae},)
 
@@ -189,6 +165,7 @@ class KV_Edit_Sampler:
 
         use_inf=model.get("use_inf")
         pipeline=model.get("pipeline")
+        model_int=model.get("model")
 
         inp=condition.get("inp")
         inp_target=condition.get("inp_target")
@@ -215,10 +192,10 @@ class KV_Edit_Sampler:
         if use_inf:
             print("start edit")
             try:
-                output_latent=pipeline.edit(opts,inp,inp_target,mask)
+                output_latent=pipeline.edit(model_int,opts,inp,inp_target,mask)
             except model_management.OOM_EXCEPTION:
                 print("get OOM,try again ")
-                output_latent=pipeline.edit(opts,inp,inp_target,mask)
+                output_latent=pipeline.edit(model_int,opts,inp,inp_target,mask)
         else:
             try:
                 print("start inverse")
@@ -227,7 +204,7 @@ class KV_Edit_Sampler:
                 else:
                     mask_inverse=None
                 opts.skip_step=0
-                pipeline.inverse(opts,mask_inverse,inp)
+                pipeline.inverse(model_int,opts,mask_inverse,inp)
                 print("inverse done,start edit")
                 #  edit
                 opts.skip_step=skip_step
@@ -238,7 +215,7 @@ class KV_Edit_Sampler:
                 else:
                     mask_inverse=None
                 opts.skip_step=0
-                pipeline.inverse(opts,mask_inverse,inp)
+                pipeline.inverse(model_int,opts,mask_inverse,inp)
                 print("inverse done,start edit")
                 #  edit
                 opts.skip_step=skip_step
@@ -263,14 +240,12 @@ class KV_Edit_Sampler:
 
 NODE_CLASS_MAPPINGS = {
     "KV_Edit_Load": KV_Edit_Load,
-    "KV_CLIP_VAE": KV_CLIP_VAE,
     "KV_Edit_PreData": KV_Edit_PreData,
     "KV_Edit_Sampler":KV_Edit_Sampler,
 
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "KV_Edit_Load": "KV_Edit_Load",
-    "KV_CLIP_VAE": "KV_CLIP_VAE",
     "KV_Edit_PreData": "KV_Edit_PreData",
     "KV_Edit_Sampler":"KV_Edit_Sampler",
 

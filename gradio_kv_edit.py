@@ -1,9 +1,7 @@
 
 import time
 from dataclasses import dataclass
-from comfy import model_management
 import torch
-from .flux.kv_edit import Flux_kv_edit
 
 @dataclass
 class SamplingOptions:
@@ -22,21 +20,21 @@ class SamplingOptions:
     attn_scale: float = 1.0
 
 class FluxEditor_kv_Wrapper:
-    def __init__(self,model_path,offload,device):
+    def __init__(self,offload,device):
         
         self.device = device
         self.offload = offload
-        device_val = "cpu" if self.offload else self.device
-        self.model=Flux_kv_edit(device_val,model_path,name='flux-dev')
-        self.model.eval()
+        #device_val = "cpu" if self.offload else self.device
+        # self.model=Flux_kv_edit(device_val,model_path,name='flux-dev')
+        # self.model.eval()
         self.info = {}
-        if self.offload:
-            self.model.cpu()
-            torch.cuda.empty_cache()
+        # if self.offload:
+        #     self.model.cpu()
+        #     torch.cuda.empty_cache()
         #     self.ae.encoder.to(self.device)
         
     @torch.inference_mode()
-    def inverse(self,opts,mask,inp):
+    def inverse(self,model,opts,mask,inp):
         self.z0 = None
         self.zt = None
 
@@ -53,7 +51,7 @@ class FluxEditor_kv_Wrapper:
 
         t0 = time.perf_counter()
 
-        self.model = self.model.to(self.device)
+        self.model = model.to(self.device) 
         self.z0,self.zt,self.info = self.model.inverse(inp,mask,opts)
         
         # if self.offload:

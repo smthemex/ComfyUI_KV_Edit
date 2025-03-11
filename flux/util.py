@@ -105,11 +105,9 @@ def print_load_warning(missing: list[str], unexpected: list[str]) -> None:
         print(f"Got {len(unexpected)} unexpected keys:\n\t" + "\n\t".join(unexpected))
 
 
-
 # 修改加载函数
 def load_flux_model(ckpt_path, device, flux_cls=Flux):
-    # original_model = cf_model.model.diffusion_model
-    # original_model.__class__ = flux_cls  # 假设已定义Flux_kv子类
+   
     with torch.device("meta" if ckpt_path is not None else device):
         model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
 
@@ -118,18 +116,24 @@ def load_flux_model(ckpt_path, device, flux_cls=Flux):
         # load_sft doesn't support torch.device
         sd = load_sft(ckpt_path, device=str(device))
         missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
-        print_load_warning(missing, unexpected)
+        del sd
+        torch.cuda.empty_cache()
+        #print_load_warning(missing, unexpected)
 
     return model
 
-# def load_flux_model(cf_model, device, flux_cls=Flux):
-#     model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
-#     sd = cf_model.model.diffusion_model.state_dict()
-#     missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
-#     print_load_warning(missing, unexpected)
-#     del sd
-#     torch.cuda.empty_cache()
-#     return model
+def load_flux_model_(cf_model, device, flux_cls=Flux):
+    original_sd = cf_model.model.diffusion_model.state_dict()
+    new_model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
+    new_model.load_state_dict(original_sd, strict=False)
+    del cf_model,original_sd
+    torch.cuda.empty_cache()
+    import comfy.model_management
+    comfy.model_management.unload_all_models()
+    comfy.model_management.soft_empty_cache()
+    #del cf_model.model.diffusion_model
+    torch.cuda.empty_cache()
+    return new_model
 
 def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download: bool = True, flux_cls=Flux) -> Flux:
     # Loading Flux
@@ -152,7 +156,9 @@ def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download:
         # load_sft doesn't support torch.device
         sd = load_sft(ckpt_path, device=str(device))
         missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
-        print_load_warning(missing, unexpected)
+        del sd
+        torch.cuda.empty_cache()
+        #print_load_warning(missing, unexpected)
     return model
 
 
@@ -195,7 +201,32 @@ def load_ae(ckpt_path: str, device: str | torch.device = "cuda", hf_download: bo
     if ckpt_path is not None:
         sd = load_sft(ckpt_path, device="cpu")
         missing, unexpected = ae.load_state_dict(sd, strict=False, assign=True)
-        print_load_warning(missing, unexpected)
+        #print_load_warning(missing, unexpected)
+        del sd
+        torch.cuda.empty_cache()
+    return ae
+
+def load_ae_cf(ckpt, device: str | torch.device = "cuda", hf_download: bool = True) -> AutoEncoder:
+    # ckpt_path = configs[name].ae_path
+    # if (
+    #     ckpt_path is None
+    #     and configs[name].repo_id is not None
+    #     and configs[name].repo_ae is not None
+    #     and hf_download
+    # ):
+    #     ckpt_path = hf_hub_download(configs[name].repo_id, configs[name].repo_ae)
+
+    # Loading the autoencoder
+    print("Init AE")
+    #with torch.device("meta" if ckpt_path is not None else device):
+    ae = AutoEncoder(configs["flux-dev"].ae_params).to(torch.bfloat16)
+
+    if ckpt is not None:
+        sd = ckpt.get_sd()
+        missing, unexpected = ae.load_state_dict(sd, strict=False, assign=True)
+        #print_load_warning(missing, unexpected)
+        del sd
+        torch.cuda.empty_cache()
     return ae
 
 def load_ae_(name: str, device: str | torch.device = "cuda", hf_download: bool = True) -> AutoEncoder:
@@ -216,7 +247,9 @@ def load_ae_(name: str, device: str | torch.device = "cuda", hf_download: bool =
     if ckpt_path is not None:
         sd = load_sft(ckpt_path, device=str(device))
         missing, unexpected = ae.load_state_dict(sd, strict=False, assign=True)
-        print_load_warning(missing, unexpected)
+        #print_load_warning(missing, unexpected)
+        del sd
+        torch.cuda.empty_cache()
     return ae
 
 # class WatermarkEmbedder:

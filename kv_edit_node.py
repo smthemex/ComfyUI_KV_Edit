@@ -53,11 +53,17 @@ class KV_Edit_Load:
         device_val = "cpu" if offload else device
         if not use_inf:
             model=Flux_kv_edit(device_val,cf_model,'flux-dev')
+            if not isinstance(cf_model, str):
+                del cf_model
+                cleanup()
             pipeline=FluxEditor_kv_Wrapper(offload,device)
         else:
             model=Flux_kv_edit_inf(device_val,cf_model,'flux-dev')
+            if not isinstance(cf_model, str):
+                del cf_model
+                cleanup()
             pipeline=FluxEditor_kv_Wrapper_inf(offload,device)
-        del cf_model
+        
         comfy.model_management.unload_all_models()
         comfy.model_management.soft_empty_cache()
         cleanup()

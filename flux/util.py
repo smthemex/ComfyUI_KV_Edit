@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-#import gc
+import gc
 from shutil import copy
 import torch
 import torch.nn as nn 
@@ -12,7 +12,7 @@ from .modules.layers import MLPEmbedder,DoubleStreamBlock_kv,DoubleStreamBlock,S
 from .model import Flux, FluxParams
 from .modules.autoencoder import AutoEncoder, AutoEncoderParams
 from .modules.conditioner import HFEmbedder
-import folder_paths
+import comfy.model_management
 import json
 import types  # 新增导入
 import torch.nn.functional as F  # 确保F.interpolate可用
@@ -122,13 +122,48 @@ def load_flux_model(ckpt_path, device, flux_cls=Flux):
 
     return model
 
+
+# def load_flux_model_cf(cf_model,device,  flux_cls=Flux):
+#     original = cf_model.model.diffusion_model
+    
+#     # 保持原参数引用（不复制）
+#     params = original.params
+#     hidden_size = original.hidden_size
+#     num_heads = original.num_heads
+    
+#     # 动态创建新模块（保持量化参数）
+#     new_blocks = nn.ModuleList([
+#         DoubleStreamBlock_kv(
+#             hidden_size,
+#             num_heads,
+#             mlp_ratio=params.mlp_ratio,
+#             qkv_bias=params.qkv_bias
+#         ) for _ in range(params.depth)
+#     ])
+    
+#     # 参数嫁接（仅替换block参数）
+#     for new_block, old_block in zip(new_blocks, original.double_blocks):
+#         new_block.load_state_dict(old_block.state_dict(), assign=True)
+    
+#     # 原子替换（保持原模型内存布局）
+#     original.__class__ = flux_cls
+#     original.double_blocks = new_blocks
+#     original.single_blocks = nn.ModuleList([
+#         SingleStreamBlock_kv(hidden_size, num_heads, params.mlp_ratio)
+#         for _ in range(params.depth_single_blocks)
+#     ])
+    
+#     return original
+
 def load_flux_model_(cf_model, device, flux_cls=Flux):
     original_sd = cf_model.model.diffusion_model.state_dict()
+    del cf_model
+    gc.collect()
     new_model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
     new_model.load_state_dict(original_sd, strict=False)
-    del cf_model,original_sd
+    del original_sd
+    gc.collect()
     torch.cuda.empty_cache()
-    import comfy.model_management
     comfy.model_management.unload_all_models()
     comfy.model_management.soft_empty_cache()
     #del cf_model.model.diffusion_model

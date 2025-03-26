@@ -3,8 +3,8 @@
 [KV_Edit](https://github.com/Xilluill/KV-Edit): Training-Free Image Editing for Precise Background Preservation，you can use it in comfyUI
 ---
 
-# Update
-* edit some code for comfy 修改一些代码，用起来更简单吧。注意，unet模型位置改变了
+# Update 20250326
+* add fp8 quant mode,you just chocie fp8 flux dev and add fp8 in name/新增fp8量化支持，fp8模型的名字里需要有fp8几个字符，注意不支持comfy量化的fp8模型，只支持单体transform，比如kajia。
   
 
 # 1. Installation

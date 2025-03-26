@@ -115,7 +115,17 @@ def load_flux_model(ckpt_path, device, flux_cls=Flux):
         print("Loading checkpoint")
         # load_sft doesn't support torch.device
         sd = load_sft(ckpt_path, device=str(device))
-        missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
+        if "fp8" in ckpt_path:
+            from optimum.quanto import requantize
+            import folder_paths
+            json_path = os.path.join(folder_paths.base_path, "custom_nodes/ComfyUI_KV_Edit/flux/config.json") #config is for pass block
+            with open(json_path,'r') as f:
+                quantization_map = json.load(f)
+            print(f"Start fp8 requantization process...")
+            requantize(model, sd, quantization_map, device=device)
+            print("Model is requantized!")
+        else:
+            missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
         del sd
         torch.cuda.empty_cache()
         #print_load_warning(missing, unexpected)

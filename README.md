@@ -27,7 +27,8 @@ pip install -r requirements.txt
 
 ```
 --   ComfyUI/models/diffusion_models  # or unet
-    ├── flux1-dev.safetensors #23.8G 目前不能用量化版的单体，还需修改代码，全量的也能跑，慢点而已
+    ├── flux1-dev.safetensors #23.8G 全量
+    ├── flux1-kj-dev-fp8.safetensors #11G 名字中有fp8自动开启量化，注意不支持comfy量化的版本
 --   ComfyUI/models/clip
     ├── clip_l.safetensors
     ├── t5xxl_fp8_e4m3fn.safetensorsvae
@@ -37,9 +38,9 @@ pip install -r requirements.txt
 
 # Example
 
-* use comfy T5 and clip and flux dev single checkpoints用comfy的text encoder和flux的fp16模型，推荐
+* use comfy T5 and clip and flux dev single checkpoints用comfy的text encoder和flux的fp16/fp8模型，推荐
 ![](https://github.com/smthemex/ComfyUI_KV_Edit/blob/main/resources/example1.png)
-* use comfy or flux dev single checkpoints 仅使用单体模型，速度更慢，更占内存，主要是量化两次模型，目前fp8模式无法使用
+* use comfy or flux dev single checkpoints 仅使用单体模型，速度更慢，更占内存，主要是量化两次模型
 ![](https://github.com/smthemex/ComfyUI_KV_Edit/blob/main/resources/example0.png)
 
 

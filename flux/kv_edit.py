@@ -228,6 +228,8 @@ class Flux_kv_edit(only_Flux):
             zt_noise = z0 *(1 - t) + noise * t
             inp_target["img"] = zt_noise[:, mask_indices,...]
         else:
+            img_name = str(info['t']) + '_' + 'img'
+            zt = info['feature'][img_name].to(zt.device)
             inp_target["img"] = zt[:, mask_indices,...]
 
         if opts.attn_scale != 0 and (~bool_mask).any():

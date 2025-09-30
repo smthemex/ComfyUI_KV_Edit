@@ -1,10 +1,8 @@
 # ComfyUI_KV_Edit
+ [KV_Edit](https://github.com/Xilluill/KV-Edit): Training-Free Image Editing for Precise Background Preservation，you can use it in comfyUI
 
-[KV_Edit](https://github.com/Xilluill/KV-Edit): Training-Free Image Editing for Precise Background Preservation，you can use it in comfyUI
----
-
-# Update 20250326
-* add fp8 quant mode,you just chocie fp8 flux dev and add fp8 in name/新增fp8量化支持，fp8模型的名字里需要有fp8几个字符，注意不支持comfy量化的fp8模型，只支持单体transform，比如kajia。
+# update
+* use single dit like kj or other /修改模型加载占用及去掉重复量化，加入加速lora支持
   
 
 # 1. Installation
@@ -37,7 +35,8 @@ pip install -r requirements.txt
 ```
 
 # Example
-
+* new
+![ ](https://github.com/smthemex/ComfyUI_KV_Edit/blob/main/example_workflows/example.png)
 * use comfy T5 and clip and flux dev single checkpoints用comfy的text encoder和flux的fp16/fp8模型，推荐
 ![](https://github.com/smthemex/ComfyUI_KV_Edit/blob/main/resources/example1.png)
 * use comfy or flux dev single checkpoints 仅使用单体模型，速度更慢，更占内存，主要是量化两次模型

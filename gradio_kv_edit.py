@@ -51,7 +51,16 @@ class FluxEditor_kv_Wrapper:
 
         t0 = time.perf_counter()
 
-        self.model = model.to(self.device) 
+        try:
+            from accelerate import init_empty_weights
+            is_accelerate_available = True
+        except:
+            is_accelerate_available = False
+        if not is_accelerate_available:
+            self.model = model.to(self.device)
+        else:
+            self.model = model 
+
         self.z0,self.zt,self.info = self.model.inverse(inp,mask,opts)
         
         # if self.offload:
@@ -79,9 +88,9 @@ class FluxEditor_kv_Wrapper:
         #self.model = self.model.to(self.device)
         x = self.model.denoise(self.z0,self.zt,inp_target,mask,opts,self.info)
         
-        if self.offload:
-            self.model.cpu()
-            torch.cuda.empty_cache()
+        # if self.offload:
+        #     self.model.cpu()
+        #     torch.cuda.empty_cache()
 
         return x
 

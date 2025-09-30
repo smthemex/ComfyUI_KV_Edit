@@ -40,13 +40,20 @@ class FluxEditor_kv_Wrapper_inf:
         torch.manual_seed(opts.seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(opts.seed)
-      
-        self.model = model.to(self.device) 
+        try:
+            from accelerate import init_empty_weights
+            is_accelerate_available = True
+        except:
+            is_accelerate_available = False
+        if not is_accelerate_available:
+            self.model = model.to(self.device)
+        else:
+            self.model = model
         x = self.model(inp, inp_target, mask, opts)
         
-        if self.offload:
-            self.model.cpu()
-            torch.cuda.empty_cache()
+        # if self.offload:
+        #     self.model.cpu()
+        #     torch.cuda.empty_cache()
 
         print("End Edit")
         return x

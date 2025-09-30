@@ -63,7 +63,9 @@ class KV_Edit_Load:
                 del cf_model
                 cleanup()
             pipeline=FluxEditor_kv_Wrapper_inf(offload,device)
-        
+            
+
+            
         comfy.model_management.unload_all_models()
         comfy.model_management.soft_empty_cache()
         cleanup()
@@ -242,17 +244,94 @@ class KV_Edit_Sampler:
         # out["samples"] = output_latent
         cleanup()
         return (pil2narry(img),)
+    
+class KV_Edit_Load_LoRA:
+    def __init__(self):
+        pass
 
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL_KVEDIT",),
+                "lora_name": (["none"] + folder_paths.get_filename_list("loras"),),
+                "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01}),
+            }
+        }
+
+    RETURN_TYPES = ("MODEL_KVEDIT",)
+    RETURN_NAMES = ("model",)
+    FUNCTION = "apply_lora"
+    CATEGORY = "KV_Edit"
+
+    def apply_lora(self, model, lora_name, lora_scale):
+        if lora_name == "none":
+            return (model,)
+        
+        try:
+            # 获取LoRA文件路径
+            lora_path = folder_paths.get_full_path("loras", lora_name)
+            if not lora_path:
+                print(f"LoRA file not found: {lora_name}")
+                return (model,)
+            model_int = model.get("model")
+            self._apply_lora_weights(model_int, lora_path, lora_scale)
+            
+            print(f"Successfully applied LoRA: {lora_name} with scale {lora_scale}")
+            return (model,)
+            
+        except Exception as e:
+            print(f"Failed to apply LoRA {lora_name}: {str(e)}")
+            return (model,)
+
+    def _apply_lora_weights(self, model, lora_path, scale):
+
+        from safetensors.torch import load_file as load_sft
+        
+        lora_sd = load_sft(lora_path, device="cpu")
+        
+        # 获取模型状态字典
+        model_sd = model.state_dict()
+        
+        # 应用LoRA权重
+        for key in lora_sd:
+            if "lora_up" in key:
+                # 找到对应的down权重和原始权重
+                down_key = key.replace("lora_up", "lora_down")
+                original_key = self._get_original_key(key)
+                
+                if down_key in lora_sd and original_key in model_sd:
+                    up_weight = lora_sd[key]
+                    down_weight = lora_sd[down_key]
+                    original_weight = model_sd[original_key]
+                    
+                    # 计算LoRA增量并应用
+                    with torch.no_grad():
+                        lora_delta = (down_weight @ up_weight) * scale
+                        model_sd[original_key].copy_(original_weight + lora_delta)
+        
+        # 更新模型权重
+        model.load_state_dict(model_sd)
+        del lora_sd
+
+    def _get_original_key(self, lora_key):
+        """从LoRA键名获取原始模型键名"""
+        # 移除LoRA特定的后缀
+        original_key = lora_key.replace(".lora_up.weight", ".weight")
+        original_key = original_key.replace(".lora_down.weight", ".weight")
+        return original_key
+    
 
 NODE_CLASS_MAPPINGS = {
     "KV_Edit_Load": KV_Edit_Load,
     "KV_Edit_PreData": KV_Edit_PreData,
-    "KV_Edit_Sampler":KV_Edit_Sampler,
-
+    "KV_Edit_Sampler": KV_Edit_Sampler,
+    "KV_Edit_Load_LoRA": KV_Edit_Load_LoRA,  # 添加LoRA节点
 }
+
 NODE_DISPLAY_NAME_MAPPINGS = {
     "KV_Edit_Load": "KV_Edit_Load",
     "KV_Edit_PreData": "KV_Edit_PreData",
-    "KV_Edit_Sampler":"KV_Edit_Sampler",
-
+    "KV_Edit_Sampler": "KV_Edit_Sampler",
+    "KV_Edit_Load_LoRA": "KV_Edit_Load_LoRA",  # 添加LoRA节点
 }

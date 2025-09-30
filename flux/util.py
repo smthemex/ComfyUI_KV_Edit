@@ -108,27 +108,60 @@ def print_load_warning(missing: list[str], unexpected: list[str]) -> None:
 # 修改加载函数
 def load_flux_model(ckpt_path, device, flux_cls=Flux):
    
-    with torch.device("meta" if ckpt_path is not None else device):
-        model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
+    # with torch.device("meta" if ckpt_path is not None else device):
+    #     model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
 
-    if ckpt_path is not None:
-        print("Loading checkpoint")
-        # load_sft doesn't support torch.device
-        sd = load_sft(ckpt_path, device=str(device))
-        if "fp8" in ckpt_path:
-            from optimum.quanto import requantize
-            import folder_paths
-            json_path = os.path.join(folder_paths.base_path, "custom_nodes/ComfyUI_KV_Edit/flux/config.json") #config is for pass block
-            with open(json_path,'r') as f:
-                quantization_map = json.load(f)
-            print(f"Start fp8 requantization process...")
-            requantize(model, sd, quantization_map, device=device)
-            print("Model is requantized!")
-        else:
-            missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
-        del sd
-        torch.cuda.empty_cache()
-        #print_load_warning(missing, unexpected)
+    from contextlib import nullcontext
+    try:
+        from accelerate import init_empty_weights,load_checkpoint_and_dispatch
+        is_accelerate_available = True
+    except:
+        is_accelerate_available = False
+    ctx = init_empty_weights if is_accelerate_available else nullcontext
+    with ctx():
+         model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
+
+    from comfy.model_management import total_vram,total_ram
+    print("Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(total_vram, total_ram))
+    max_memory=int(total_vram/1000.0)-2 # 设置最大显存
+
+    model = load_checkpoint_and_dispatch(
+        model,
+        ckpt_path,
+        device_map="auto",  # 自动分配设备
+        max_memory={0: f"{max_memory}GiB", "cpu": "20GiB"},  # 指定每个设备的最大内存
+        offload_folder="offload",  # 磁盘卸载文件夹
+        no_split_module_classes=["DoubleStreamBlock_kv", "SingleStreamBlock_kv"], 
+        dtype=torch.bfloat16
+    )   
+    # if ckpt_path is not None:
+    #     print("Loading checkpoint")
+    #     # load_sft doesn't support torch.device
+    #     sd = load_sft(ckpt_path, device=str(device))
+    #     print("Loaded checkpoint",sd.keys())
+    #     if "fp8" in ckpt_path:
+    #         if is_accelerate_available:
+    #             # 使用 set_module_tensor_to_device 逐个设置参数
+    #             for name, param in sd.items():
+    #                 set_module_tensor_to_device(model, name, "cuda", value=param)
+    #         else:
+    #             # 否则使用常规方式
+    #             model.load_state_dict(sd)
+    #         # from optimum.quanto import requantize
+    #         # import folder_paths
+    #         # json_path = os.path.join(folder_paths.base_path, "custom_nodes/ComfyUI_KV_Edit/flux/config.json") #config is for pass block
+    #         # with open(json_path,'r') as f:
+    #         #     quantization_map = json.load(f)
+    #         # print(f"Start fp8 requantization process...")
+    #         # requantize(model, sd, quantization_map, device=device)
+    #         # print("Model is requantized!")
+    #         model.load_state_dict(sd, strict=False,)
+    #     else:
+    #         missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
+    #         print_load_warning(missing, unexpected)
+    #     del sd
+    #     torch.cuda.empty_cache()
+    #     #print_load_warning(missing, unexpected)
 
     return model
 
@@ -167,6 +200,7 @@ def load_flux_model(ckpt_path, device, flux_cls=Flux):
 
 def load_flux_model_(cf_model, device, flux_cls=Flux):
     original_sd = cf_model.model.diffusion_model.state_dict()
+    print("Loaded checkpoint",original_sd.keys())
     del cf_model
     gc.collect()
     new_model = flux_cls(configs["flux-dev"].params).to(torch.bfloat16)
@@ -297,45 +331,3 @@ def load_ae_(name: str, device: str | torch.device = "cuda", hf_download: bool =
         torch.cuda.empty_cache()
     return ae
 
-# class WatermarkEmbedder:
-#     def __init__(self, watermark):
-#         self.watermark = watermark
-#         self.num_bits = len(WATERMARK_BITS)
-#         self.encoder = WatermarkEncoder()
-#         self.encoder.set_watermark("bits", self.watermark)
-
-#     def __call__(self, image: torch.Tensor) -> torch.Tensor:
-#         """
-#         Adds a predefined watermark to the input image
-
-#         Args:
-#             image: ([N,] B, RGB, H, W) in range [-1, 1]
-
-#         Returns:
-#             same as input but watermarked
-#         """
-#         image = 0.5 * image + 0.5
-#         squeeze = len(image.shape) == 4
-#         if squeeze:
-#             image = image[None, ...]
-#         n = image.shape[0]
-#         image_np = rearrange((255 * image).detach().cpu(), "n b c h w -> (n b) h w c").numpy()[:, :, :, ::-1]
-#         # torch (b, c, h, w) in [0, 1] -> numpy (b, h, w, c) [0, 255]
-#         # watermarking libary expects input as cv2 BGR format
-#         for k in range(image_np.shape[0]):
-#             image_np[k] = self.encoder.encode(image_np[k], "dwtDct")
-#         image = torch.from_numpy(rearrange(image_np[:, :, :, ::-1], "(n b) h w c -> n b c h w", n=n)).to(
-#             image.device
-#         )
-#         image = torch.clamp(image / 255, min=0.0, max=1.0)
-#         if squeeze:
-#             image = image[0]
-#         image = 2 * image - 1
-#         return image
-
-
-# # A fixed 48-bit message that was chosen at random
-# WATERMARK_MESSAGE = 0b001010101111111010000111100111001111010100101110
-# # bin(x)[2:] gives bits of x as str, use int to convert them to 0/1
-# WATERMARK_BITS = [int(bit) for bit in bin(WATERMARK_MESSAGE)[2:]]
-# #embed_watermark = WatermarkEmbedder(WATERMARK_BITS)

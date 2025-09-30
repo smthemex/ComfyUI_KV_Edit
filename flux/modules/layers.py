@@ -264,6 +264,42 @@ class LastLayer(nn.Module):
         x = (1 + scale[:, None, :]) * self.norm_final(x) + shift[:, None, :]
         x = self.linear(x)
         return x
+    
+import threading
+# 线程局部存储，避免多线程冲突
+_local_storage = threading.local()
+
+def get_safe_feature_dict():
+    """获取线程安全的特征字典"""
+    if not hasattr(_local_storage, 'safe_feature_dict'):
+        _local_storage.safe_feature_dict = {}
+    return _local_storage.safe_feature_dict
+
+def sync_features_to_safe_dict(info):
+    """将 info['feature'] 中的特征同步到安全字典"""
+    if 'feature' in info:
+        safe_dict = get_safe_feature_dict()
+        for key, value in info['feature'].items():
+            if isinstance(value, torch.Tensor):
+                # 保存张量的副本，避免设备间干扰
+                safe_dict[key] = value.detach()  # 保持在当前设备
+            else:
+                safe_dict[key] = value
+
+def get_feature_from_safe_dict(feature_name, target_device):
+    """从安全字典中获取特征"""
+    safe_dict = get_safe_feature_dict()
+    if feature_name in safe_dict:
+        feature = safe_dict[feature_name]
+        if isinstance(feature, torch.Tensor):
+            return feature.to(target_device)
+        return feature
+    return None
+
+def clear_safe_feature_dict():
+    """清空安全特征字典"""
+    if hasattr(_local_storage, 'safe_feature_dict'):
+        _local_storage.safe_feature_dict.clear()
 
 
 class DoubleStreamBlock_kv(DoubleStreamBlock):
@@ -291,9 +327,13 @@ class DoubleStreamBlock_kv(DoubleStreamBlock):
         
         feature_k_name = str(info['t']) + '_' + str(info['id']) + '_' + 'MB' + '_' + 'K'
         feature_v_name = str(info['t']) + '_' + str(info['id']) + '_' + 'MB' + '_' + 'V'
+        #print(info['inverse'])
         if info['inverse']:
             info['feature'][feature_k_name] = img_k.cpu()
             info['feature'][feature_v_name] = img_v.cpu()
+
+            sync_features_to_safe_dict(info)
+
             q = torch.cat((txt_q, img_q), dim=2)
             k = torch.cat((txt_k, img_k), dim=2)
             v = torch.cat((txt_v, img_v), dim=2)
@@ -307,8 +347,12 @@ class DoubleStreamBlock_kv(DoubleStreamBlock):
                 attn = attention(q, k, v, pe=pe)
     
         else:
-            source_img_k = info['feature'][feature_k_name].to(img.device)
-            source_img_v = info['feature'][feature_v_name].to(img.device)
+            if is_feature_available_in_info(info, feature_k_name):
+                source_img_k = info['feature'][feature_k_name].to(img.device)
+                source_img_v = info['feature'][feature_v_name].to(img.device)
+            else:
+                source_img_k = get_feature_from_safe_dict(feature_k_name, img.device)
+                source_img_v = get_feature_from_safe_dict(feature_v_name, img.device)
     
             mask_indices = info['mask_indices'] 
             source_img_k[:, :, mask_indices, ...] = img_k
@@ -330,6 +374,14 @@ class DoubleStreamBlock_kv(DoubleStreamBlock):
         txt = txt + txt_mod1.gate * self.txt_attn.proj(txt_attn)
         txt = txt + txt_mod2.gate * self.txt_mlp((1 + txt_mod2.scale) * self.txt_norm2(txt) + txt_mod2.shift)
         return img, txt
+    
+def is_feature_available_in_info(info: dict, feature_name: str) -> bool:
+    """检查特征是否在 info 字典中可用"""
+    try:
+        return (feature_name in info.get('feature', {}) and 
+                info['feature'][feature_name] is not None)
+    except:
+        return False 
     
 class SingleStreamBlock_kv(SingleStreamBlock):
     """
@@ -371,6 +423,9 @@ class SingleStreamBlock_kv(SingleStreamBlock):
         if info['inverse']:
             info['feature'][feature_k_name] = img_k.cpu()
             info['feature'][feature_v_name] = img_v.cpu()
+
+            sync_features_to_safe_dict(info)
+
             if 'attention_mask' in info:
                 if isinstance(info['attention_mask'], torch.Tensor):
                    attention_mask_=info['attention_mask'].to(x.device)
@@ -381,8 +436,12 @@ class SingleStreamBlock_kv(SingleStreamBlock):
                 attn = attention(q, k, v, pe=pe)
             
         else:
-            source_img_k = info['feature'][feature_k_name].to(x.device)
-            source_img_v = info['feature'][feature_v_name].to(x.device)
+            if is_feature_available_in_info(info, feature_k_name):
+                source_img_k = info['feature'][feature_k_name].to(x.device)
+                source_img_v = info['feature'][feature_v_name].to(x.device)
+            else:
+                source_img_k = get_feature_from_safe_dict(feature_k_name, x.device)
+                source_img_v = get_feature_from_safe_dict(feature_v_name, x.device)
         
             mask_indices = info['mask_indices']
             #print(source_img_k.shape,img_k.shape,mask_indices.shape) #torch.Size([1, 24, 768, 128]) torch.Size([1, 24, 0, 128]) torch.Size([152])

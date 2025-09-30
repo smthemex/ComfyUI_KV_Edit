@@ -1,0 +1,592 @@
+{
+  "id": "6e3edd3c-6fa2-4d01-ad55-33e37446634d",
+  "revision": 0,
+  "last_node_id": 34,
+  "last_link_id": 70,
+  "nodes": [
+    {
+      "id": 14,
+      "type": "SaveImage",
+      "pos": [
+        21780.08203125,
+        -884.1846923828125
+      ],
+      "size": [
+        305.730712890625,
+        292.5241394042969
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 46
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 31,
+      "type": "MaskToImage",
+      "pos": [
+        20504.787109375,
+        -440.2896423339844
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 65
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            66
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 32,
+      "type": "ImageScale",
+      "pos": [
+        20721.037109375,
+        -276.83343505859375
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 66
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            67
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "nearest-exact",
+        512,
+        512,
+        "disabled"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "ImageScale",
+      "pos": [
+        20682.861328125,
+        -511.3575744628906
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 63
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            64
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "nearest-exact",
+        512,
+        512,
+        "disabled"
+      ]
+    },
+    {
+      "id": 33,
+      "type": "ImageToMask",
+      "pos": [
+        21039.013671875,
+        -430.8477783203125
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 67
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            68
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageToMask"
+      },
+      "widgets_values": [
+        "red"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "KV_Edit_Load",
+      "pos": [
+        20803.994140625,
+        -1118.5433349609375
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "links": [
+            69
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Load"
+      },
+      "widgets_values": [
+        "flux1-kj-dev-fp8.safetensors",
+        true,
+        true
+      ]
+    },
+    {
+      "id": 34,
+      "type": "KV_Edit_Load_LoRA",
+      "pos": [
+        21140.34765625,
+        -1050.898193359375
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "link": 69
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "links": [
+            70
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Load_LoRA"
+      },
+      "widgets_values": [
+        "flux-turbo.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 5,
+      "type": "LoadImage",
+      "pos": [
+        20210.099609375,
+        -925.0836791992188
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            63
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": [
+            65
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "clipspace/clipspace-painted-masked-1704959.png [input]",
+        "image"
+      ]
+    },
+    {
+      "id": 27,
+      "type": "DualCLIPLoader",
+      "pos": [
+        20632.6328125,
+        -937.8939208984375
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            60
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "clip_l.safetensors",
+        "flux",
+        "default"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "VAELoader",
+      "pos": [
+        20623.068359375,
+        -738.1512451171875
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            61
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "KV_Edit_PreData",
+      "pos": [
+        20983.224609375,
+        -812.3342895507812
+      ],
+      "size": [
+        400,
+        202
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 60
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 61
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 64
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 68
+        }
+      ],
+      "outputs": [
+        {
+          "name": "condition",
+          "type": "CONDITION_KV",
+          "links": [
+            52
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_PreData"
+      },
+      "widgets_values": [
+        "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love here'.",
+        "in a cluttered wooden cabin,a workbench holds a green neon sign that reads 'I love nana'."
+      ]
+    },
+    {
+      "id": 19,
+      "type": "KV_Edit_Sampler",
+      "pos": [
+        21439.259765625,
+        -876.9882202148438
+      ],
+      "size": [
+        315,
+        294
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL_KVEDIT",
+          "link": 70
+        },
+        {
+          "name": "condition",
+          "type": "CONDITION_KV",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KV_Edit_Sampler"
+      },
+      "widgets_values": [
+        968594714,
+        "randomize",
+        10,
+        1.5,
+        10,
+        3.5,
+        1,
+        1,
+        false,
+        false
+      ]
+    }
+  ],
+  "links": [
+    [
+      46,
+      19,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      52,
+      25,
+      0,
+      19,
+      1,
+      "CONDITION_KV"
+    ],
+    [
+      60,
+      27,
+      0,
+      25,
+      0,
+      "CLIP"
+    ],
+    [
+      61,
+      28,
+      0,
+      25,
+      1,
+      "VAE"
+    ],
+    [
+      63,
+      5,
+      0,
+      30,
+      0,
+      "IMAGE"
+    ],
+    [
+      64,
+      30,
+      0,
+      25,
+      2,
+      "IMAGE"
+    ],
+    [
+      65,
+      5,
+      1,
+      31,
+      0,
+      "MASK"
+    ],
+    [
+      66,
+      31,
+      0,
+      32,
+      0,
+      "IMAGE"
+    ],
+    [
+      67,
+      32,
+      0,
+      33,
+      0,
+      "IMAGE"
+    ],
+    [
+      68,
+      33,
+      0,
+      25,
+      3,
+      "MASK"
+    ],
+    [
+      69,
+      29,
+      0,
+      34,
+      0,
+      "MODEL_KVEDIT"
+    ],
+    [
+      70,
+      34,
+      0,
+      19,
+      0,
+      "MODEL_KVEDIT"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7400249944258334,
+      "offset": [
+        -19984.64368291623,
+        1200.0752608333514
+      ]
+    },
+    "frontendVersion": "1.26.13",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

@@ -144,7 +144,7 @@ class Flux_kv_edit_inf(only_Flux):
         z0 = inp["img"]
 
         with torch.no_grad():
-            info['inject'] = True
+            info['inverse'] = True
             z_fe, info = denoise_kv_inf(self.model, img=inp["img"], img_ids=inp['img_ids'], 
                                     source_txt=inp['txt'], source_txt_ids=inp['txt_ids'], source_vec=inp['vec'],
                                     target_txt=inp_target['txt'], target_txt_ids=inp_target['txt_ids'], target_vec=inp_target['vec'],

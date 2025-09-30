@@ -4,7 +4,7 @@ from typing import Callable
 import torch
 from einops import rearrange, repeat
 from torch import Tensor
-
+from .modules.layers import clear_safe_feature_dict
 from .model import Flux,Flux_kv
 from .modules.conditioner import HFEmbedder
 from tqdm import tqdm
@@ -288,4 +288,5 @@ def denoise_kv_inf(
     
         v_fe = v_tar - v_src[:, mask_indices,...]
         z_fe = z_fe + (t_prev - t_curr) * v_fe * info['mask'][:, mask_indices,...]
+    clear_safe_feature_dict()
     return z_fe, info
